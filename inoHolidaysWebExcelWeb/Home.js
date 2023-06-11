@@ -18,17 +18,22 @@
                 $("#template-description").text("Add Easter date to current cell.");
                 $('#addEaster-text').text("Add Easter date");
                 $('#addEaster-desc').text("Add Easter date to current cell.");
+                $('#addHoliday-text').text("Add Holiday");
+                $('#addHoliday-desc').text("Add public holidays starting in current cell.");
 
                 $('#addEaster-button').click(addEaster);
+                $('#addHoliday-button').click(addHolidays);
                 return;
             }
 
             $("#template-description").text("Add Easter date to current cell.");
             $('#addEaster-text').text("Add Easter date");
             $('#addEaster-desc').text("Add Easter date to current cell.");
-
+            $('#addHoliday-text').text("Add Holiday");
+            $('#addHoliday-desc').text("Add public holidays starting in current cell.");
             // Fügt einen Klickereignishandler für die Hervorhebungsschaltfläche hinzu.
             $('#addEaster-button').click(addEaster);
+            $('#addHoliday-button').click(addHolidays);
         });
     };
 
@@ -87,6 +92,100 @@
             return ctx.sync();
         })
             .catch(errorHandler);
+    }
+
+    function addHolidays() {
+        Excel.run(function (ctx) {
+
+            var year = document.getElementById("eyear").value;
+
+            var range = ctx.workbook.getActiveCell()
+
+            if (isNaN(year) == true) {
+                range.values = "Year must be a number between 1970 and 2099";
+            } else if (parseInt(year) < 1970 || parseInt(year) > 2099) {
+                range.values = "Year must be a number between 1970 and 2099";
+            } else {
+
+                if ((year == "") || (year == null)) { year = new Date().getFullYear() };
+
+                const holidays = [
+                    ["01.01.2021", "Neujahr", "All"],
+                    ["06.01.2021", "Drei Hl.Könige", "BY, ST, BW"],
+                    ["08.03.2021", "Int.Frauentag", "BE, MV"],
+                    ["Ostern - 2", "Karfreitag", "All"],
+                    ["Ostern + 1", "Ostermontag", "All"],
+                    ["01.05.2021", "Tag der Arbeit", "All"],
+                    ["Ostern + 39", "Christi Himmelfahrt", "All"],
+                    ["Ostern + 50", "Pfingstmontag", "All"],
+                    ["Ostern + 60", "Fronleichnam", "BW, BY, HE, NW, RP, SL"],
+                    ["15.08.2021", "Maria Himmelfahrt", "BY, SL"],
+                    ["20.09.2021", "Weltkindertag", "TH"],
+                    ["03.10.2021", "Tag der dt.Einheit", "All"],
+                    ["31.10.2021", "Reformationstag", "SH, NI, HB, HH, BB, ST, SN, TH, MV"],
+                    ["01.11.2021", "Allerheiligen", "BW, BY, NW, RP, SL"],
+                    ["Advent - 32", "Buß - und Bettag", "SN"],
+                    ["25.12.2021", "1. Weihnachtstag", "All"],
+                    ["26.12.2021", "2. Weihnachtstag", "All"]
+                ];
+
+                var rangeAddress = "A1";
+                var sheetName = "Blatt1";
+
+                let sheet = ctx.workbook.worksheets.getItem(sheetName);
+                let holidayTable = sheet.tables.add("A1:C1", true /*hasHeaders*/);
+                holidayTable.name = "GermanHolidays";
+
+                holidayTable.getHeaderRowRange().values = [["Date", "Name", "Regions/State"]];
+
+                for (const holiday of holidays) {
+                    holidayTable.rows.add(null /*add rows to the end of the table*/,
+                        [[getHolidayDate(holiday[0], year), holiday[1], holiday[2] ]]);
+                }
+
+                if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
+                    sheet.getUsedRange().format.autofitColumns();
+                    sheet.getUsedRange().format.autofitRows();
+                }
+
+            }
+            return ctx.sync();
+        })
+            .catch(errorHandler);
+    }
+
+    function getHolidayDate(date, year) {
+        const holiday = date.split(' ');
+        if (holiday[0] === "Ostern") {
+            var direction = 1;
+            if (holiday[1] === "-") {
+                direction = -1;
+            }
+            var edate = moment(dateFromEaster(year, direction * holiday[2]));
+            return edate.format('L');
+        } else if (holiday[0] === "Advent") {
+            var direction = 1;
+            if (holiday[1] === "-") {
+                direction = -1;
+            }
+            const momentDate = lastAdvent(year);
+            momentDate.add(direction * holiday[2], 'd');
+            return momentDate.format('L');
+        } else {
+            const hdate = date.split('.');
+            const hdateConv = year + '-' + hdate[1].padStart(2, "0") + '-' + hdate[0].padStart(2, "0");
+            const momentDate = moment(hdateConv + 'T00:00:00.000+00:00')
+            return momentDate.format('L');
+        }
+    }
+
+    function lastAdvent(year) {
+        const momentDate = moment(year + '-12-24T00:00:00.000+00:00')
+        const wkday = momentDate.day();
+        if (wkday != 0) {
+            momentDate.add(-wkday, 'd');
+        }
+        return momentDate;
     }
 
     // Eine Hilfsfunktion zur Behandlung von Fehlern.

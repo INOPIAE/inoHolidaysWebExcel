@@ -140,6 +140,7 @@
     <Content Include="Images\Button32x32.png" />
     <Content Include="Images\Button80x80.png" />
     <Content Include="Images\Close.png" />
+    <Content Include="de.inocsv" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <None Include="Scripts\embedded\1.0\visio-web-embedded.debug-vsdoc.js" />
     <Content Include="Scripts\embedded\1.0\visio-web-embedded.debug.js" />
