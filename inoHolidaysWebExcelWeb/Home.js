@@ -22,7 +22,7 @@
                 $('#addHoliday-desc').text("Add public holidays starting in current cell.");
 
                 $('#addEaster-button').click(addEaster);
-                $('#addHoliday-button').click(addHolidays);
+                $('#addHoliday-button').click(addHolidays1);
                 return;
             }
 
@@ -94,12 +94,26 @@
             .catch(errorHandler);
     }
 
-    function addHolidays() {
-        Excel.run(function (ctx) {
+    async function addHolidays() {
+        await Excel.run(async (ctx) => {
 
+            let activeCell = ctx.workbook.getActiveCell();
+            activeCell.load("address");
+
+            await ctx.sync();
+
+            console.log("The active cell is " + activeCell.address);
+            var celladdress = activeCell.address.split('!');
+            console.log(celladdress[0]);
+            console.log(celladdress[1]);
+
+            var rangeAddress = celladdress[1];
+            var sheetName = celladdress[0];
+
+            
             var year = document.getElementById("eyear").value;
 
-            var range = ctx.workbook.getActiveCell()
+/*            var range = ctx.workbook.getActiveCell()*/
 
             if (isNaN(year) == true) {
                 range.values = "Year must be a number between 1970 and 2099";
@@ -129,11 +143,9 @@
                     ["26.12.2021", "2. Weihnachtstag", "All"]
                 ];
 
-                var rangeAddress = "A1";
-                var sheetName = "Blatt1";
-
                 let sheet = ctx.workbook.worksheets.getItem(sheetName);
-                let holidayTable = sheet.tables.add("A1:C1", true /*hasHeaders*/);
+                
+                let holidayTable = sheet.tables.add(rangeAddress +":" + moveCell(rangeAddress, 0, 2), true /*hasHeaders*/);
                 holidayTable.name = "GermanHolidays";
 
                 holidayTable.getHeaderRowRange().values = [["Date", "Name", "Regions/State"]];
@@ -186,6 +198,34 @@
             momentDate.add(-wkday, 'd');
         }
         return momentDate;
+    }
+
+    function moveCell(cell, rows, columns) {
+        if ((rows == "") || (rows == null)) { rows = 0 };
+        if ((columns == "") || (columns == null)) { columns = 0 };
+        let cellparts = cell.match(/[a-zA-Z]+|[0-9]+/g);
+
+        let char = cellparts[0].split('');
+        let i = 0;
+        let cv = 0;
+
+        for (let i = 0 ; i < char.length ; i++) {
+            cv += (char[char.length - 1 - i].charCodeAt() - 64) * (26 ** i)
+        }
+
+        cv += columns
+        let result = '';
+        i = char.length;
+        do {
+            i--;
+            const quotient = Math.floor(cv / (26 ** i));   // 1
+            cv = cv % (26 ** i); 
+            result += String.fromCharCode(quotient + 64);
+        } while (i > 0);
+
+        result += (+cellparts[1] + rows)
+
+        return result;
     }
 
     // Eine Hilfsfunktion zur Behandlung von Fehlern.
