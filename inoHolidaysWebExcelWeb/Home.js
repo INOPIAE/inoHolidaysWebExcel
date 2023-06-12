@@ -1,7 +1,9 @@
-﻿(function () {
+﻿
+(function () {
     "use strict";
 
-    var cellToHighlight;
+
+
     var messageBanner;
 
     // Die Initialisierungsfunktion muss bei jedem Laden einer neuen Seite ausgeführt werden.
@@ -11,7 +13,8 @@
             var element = document.querySelector('.MessageBanner');
             messageBanner = new components.MessageBanner(element);
             messageBanner.hideBanner();
-            
+
+
             // Wenn nicht Excel 2016 verwendet wird, Fallbacklogik verwenden.
             if (!Office.context.requirements.isSetSupported('ExcelApi', '1.1')) {
                 $("#eyear-text").text("Year:");
@@ -26,9 +29,14 @@
                 return;
             }
 
+            $("#eyear-text").text("Year:");
             $("#template-description").text("Add Easter date to current cell.");
             $('#addEaster-text').text("Add Easter date");
             $('#addEaster-desc').text("Add Easter date to current cell.");
+
+            $("#hcountry-text").text("Select country:");
+            $('#addHoliday-textt').text("test");
+
             $('#addHoliday-text').text("Add Holiday");
             $('#addHoliday-desc').text("Add public holidays starting in current cell.");
             // Fügt einen Klickereignishandler für die Hervorhebungsschaltfläche hinzu.
@@ -97,6 +105,53 @@
     async function addHolidays() {
         await Excel.run(async (ctx) => {
 
+            var country = document.getElementById("hcountry").value;
+            let tableName = '';
+            let holidays = '';
+            console.log(country);
+
+            switch (country) {
+                case 'at':
+                    tableName = 'AustrianHolidays';
+                    holidays = [
+                        ["01.01.2021", "Neujahr", "All"],
+                        ["06.01.2021", "Drei Hl. Könige", "All"],
+                        ["Ostern + 1", "Ostermontag", "All"],
+                        ["01.05.2021", "Tag der Arbeit", "All"],
+                        ["Ostern + 39", "Christi Himmelfahrt", "All"],
+                        ["Ostern + 50", "Pfingstmontag", "All"],
+                        ["Ostern + 60", "Fronleichnam", "All"],
+                        ["15.08.2021", "Mariä Himmelfahrt", "All"],
+                        ["26.10.2021", "Nationalfeiertag", "All"],
+                        ["01.11.2021", "Allerheiligen", "All"],
+                        ["08.12.2021", "Mariä Empfängnis", "All"],
+                        ["25.12.2021", "Christtag", "All"],
+                        ["26.12.2021", "Stefanitag", "All"]
+                    ];
+                    break;
+                default:
+                    tableName = 'GermanHolidays';
+                    holidays = [
+                        ["01.01.2021", "Neujahr", "All"],
+                        ["06.01.2021", "Drei Hl.Könige", "BY, ST, BW"],
+                        ["08.03.2021", "Int.Frauentag", "BE, MV"],
+                        ["Ostern - 2", "Karfreitag", "All"],
+                        ["Ostern + 1", "Ostermontag", "All"],
+                        ["01.05.2021", "Tag der Arbeit", "All"],
+                        ["Ostern + 39", "Christi Himmelfahrt", "All"],
+                        ["Ostern + 50", "Pfingstmontag", "All"],
+                        ["Ostern + 60", "Fronleichnam", "BW, BY, HE, NW, RP, SL"],
+                        ["15.08.2021", "Maria Himmelfahrt", "BY, SL"],
+                        ["20.09.2021", "Weltkindertag", "TH"],
+                        ["03.10.2021", "Tag der dt.Einheit", "All"],
+                        ["31.10.2021", "Reformationstag", "SH, NI, HB, HH, BB, ST, SN, TH, MV"],
+                        ["01.11.2021", "Allerheiligen", "BW, BY, NW, RP, SL"],
+                        ["Advent - 32", "Buß - und Bettag", "SN"],
+                        ["25.12.2021", "1. Weihnachtstag", "All"],
+                        ["26.12.2021", "2. Weihnachtstag", "All"]
+                    ];
+            }
+
             let activeCell = ctx.workbook.getActiveCell();
             activeCell.load("address");
 
@@ -107,10 +162,9 @@
             var rangeAddress = celladdress[1];
             var sheetName = celladdress[0];
 
-            let tableName = 'GermanHolidays';
             let tc = '';
             let table = '';
-
+            const tableNameB = tableName;
             let tableCount = ctx.workbook.tables.getCount();
             await ctx.sync();
 
@@ -122,7 +176,7 @@
                 await ctx.sync();
                 if (table.name === tableName) {
                     tc++;
-                    tableName = 'GermanHolidays' + tc;
+                    tableName = tableNameB + tc;
                     i = -1;
                 }
             }
@@ -137,25 +191,7 @@
 
                 if ((year == "") || (year == null)) { year = new Date().getFullYear() };
 
-                const holidays = [
-                    ["01.01.2021", "Neujahr", "All"],
-                    ["06.01.2021", "Drei Hl.Könige", "BY, ST, BW"],
-                    ["08.03.2021", "Int.Frauentag", "BE, MV"],
-                    ["Ostern - 2", "Karfreitag", "All"],
-                    ["Ostern + 1", "Ostermontag", "All"],
-                    ["01.05.2021", "Tag der Arbeit", "All"],
-                    ["Ostern + 39", "Christi Himmelfahrt", "All"],
-                    ["Ostern + 50", "Pfingstmontag", "All"],
-                    ["Ostern + 60", "Fronleichnam", "BW, BY, HE, NW, RP, SL"],
-                    ["15.08.2021", "Maria Himmelfahrt", "BY, SL"],
-                    ["20.09.2021", "Weltkindertag", "TH"],
-                    ["03.10.2021", "Tag der dt.Einheit", "All"],
-                    ["31.10.2021", "Reformationstag", "SH, NI, HB, HH, BB, ST, SN, TH, MV"],
-                    ["01.11.2021", "Allerheiligen", "BW, BY, NW, RP, SL"],
-                    ["Advent - 32", "Buß - und Bettag", "SN"],
-                    ["25.12.2021", "1. Weihnachtstag", "All"],
-                    ["26.12.2021", "2. Weihnachtstag", "All"]
-                ];
+
 
                 let sheet = ctx.workbook.worksheets.getItem(sheetName);
                 

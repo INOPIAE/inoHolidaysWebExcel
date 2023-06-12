@@ -15,6 +15,7 @@
     <!-- <script src="Scripts/Office/1/office.js" type="text/javascript"></script>  -->
 
     <script src="Home.js" type="text/javascript"></script>
+    <script type="module" src="../countrycodes/holidays.js"></script>
     <link href="Home.css" rel="stylesheet" type="text/css" />
     <link href="../Content/Button.css" rel="stylesheet" type="text/css" />
     <link href="../Content/MessageBanner.css" rel="stylesheet" type="text/css" />
@@ -46,6 +47,12 @@
                 <span class="Button-label" id="addEaster-text"></span>
                 <span class="Button-description" id="addEaster-desc"></span>
             </button>
+            <br /><br />
+            <label for="hcountry" id="hcountry-text">Select country</label>
+            <select name="hcountry" id="hcountry">
+                <option>at</option>
+                <option selected>de</option>
+            </select>
             <br /><br />
             <button class="Button Button--primary" id="addHoliday-button">
                 <span class="Button-icon"><i class="ms-Icon ms-Icon--plus"></i></span>
