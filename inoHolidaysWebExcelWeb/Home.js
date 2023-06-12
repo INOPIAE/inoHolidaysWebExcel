@@ -102,18 +102,32 @@
 
             await ctx.sync();
 
-            console.log("The active cell is " + activeCell.address);
             var celladdress = activeCell.address.split('!');
-            console.log(celladdress[0]);
-            console.log(celladdress[1]);
 
             var rangeAddress = celladdress[1];
             var sheetName = celladdress[0];
 
-            
-            var year = document.getElementById("eyear").value;
+            let tableName = 'GermanHolidays';
+            let tc = '';
+            let table = '';
 
-/*            var range = ctx.workbook.getActiveCell()*/
+            let tableCount = ctx.workbook.tables.getCount();
+            await ctx.sync();
+
+            let tcount = tableCount.value;
+
+            for (let i = 0; i < tcount; i++) {
+                table = ctx.workbook.tables.getItemAt(i);
+                table.load('name');
+                await ctx.sync();
+                if (table.name === tableName) {
+                    tc++;
+                    tableName = 'GermanHolidays' + tc;
+                    i = -1;
+                }
+            }
+
+            var year = document.getElementById("eyear").value;
 
             if (isNaN(year) == true) {
                 range.values = "Year must be a number between 1970 and 2099";
@@ -146,7 +160,7 @@
                 let sheet = ctx.workbook.worksheets.getItem(sheetName);
                 
                 let holidayTable = sheet.tables.add(rangeAddress +":" + moveCell(rangeAddress, 0, 2), true /*hasHeaders*/);
-                holidayTable.name = "GermanHolidays";
+                holidayTable.name = tableName;
 
                 holidayTable.getHeaderRowRange().values = [["Date", "Name", "Regions/State"]];
 
